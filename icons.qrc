@@ -1,0 +1,38 @@
+<!DOCTYPE RCC>
+<RCC version = "1.0">
+<qresource>
+    <file>icons/fingerprint_ph.png</file>
+    <file>icons/shutdown.png</file>
+    <file>icons/SORSOGON.png</file>
+    <file>icons/ph_design_6.png</file>
+    <file>icons/upload_documents.png</file>
+    <file>icons/upload_image_border.png</file>
+    <file>icons/upload_images.png</file>
+    <file>icons/_alphabetical-sorting.png</file>
+    <file>icons/_archive-folder.png</file>
+    <file>icons/_delete-bin.png</file>
+    <file>icons/_exit.png</file>
+    <file>icons/_gmail.png</file>
+    <file>icons/_home.png</file>
+    <file>icons/_save.png</file>
+    <file>icons/_search.png</file>
+    <file>icons/_settings.png</file>
+    <file>icons/_sort-by-creation-date.png</file>
+    <file>icons/_up-down-arrow.png</file>
+    <file>icons/_upload.png</file>
+    <file>icons/add-book.png</file>
+    <file>icons/add-user-male.png</file>
+    <file>icons/delete-database.png</file>
+    <file>icons/denied.png</file>
+    <file>icons/edit.png</file>
+    <file>icons/edit-file.png</file>
+    <file>icons/edit-profile.png</file>
+    <file>icons/edit-property.png</file>
+    <file>icons/composing-mail.png</file>
+    <file>icons/inbox.png</file>
+    <file>icons/chat-message.png</file>
+    <file>icons/download.png</file>
+    <file>icons/network-drive.png</file>
+    <file>icons/paper-plane.png</file>
+</qresource>
+</RCC>
