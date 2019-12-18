@@ -34,5 +34,8 @@
     <file>icons/download.png</file>
     <file>icons/network-drive.png</file>
     <file>icons/paper-plane.png</file>
+    <file>icons/lock.png</file>
+    <file>icons/view.png</file>
+    <file>icons/view-details.png</file>
 </qresource>
 </RCC>

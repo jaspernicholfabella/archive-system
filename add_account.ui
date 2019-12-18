@@ -93,7 +93,7 @@
           <bool>true</bool>
          </property>
         </widget>
-        <widget class="QLabel" name="label_7">
+        <widget class="QLabel" name="account_label">
          <property name="geometry">
           <rect>
            <x>60</x>
@@ -112,7 +112,7 @@
           <string notr="true">color: rgb(255, 255, 255);</string>
          </property>
          <property name="text">
-          <string>Add Account</string>
+          <string>Account</string>
          </property>
         </widget>
        </widget>
@@ -134,13 +134,19 @@
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
           <widget class="QLabel" name="label">
+           <property name="font">
+            <font>
+             <family>Segoe UI</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Username : </string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit"/>
+          <widget class="QLineEdit" name="username"/>
          </item>
         </layout>
        </widget>
@@ -162,13 +168,19 @@
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
           <widget class="QLabel" name="label_2">
+           <property name="font">
+            <font>
+             <family>Segoe UI</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Password :  </string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit_2"/>
+          <widget class="QLineEdit" name="password"/>
          </item>
         </layout>
        </widget>
@@ -190,13 +202,25 @@
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
           <widget class="QLabel" name="label_3">
+           <property name="font">
+            <font>
+             <family>Segoe UI</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Previlage :</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="comboBox">
+          <widget class="QComboBox" name="previlage_combo">
+           <property name="font">
+            <font>
+             <family>Segoe UI</family>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <item>
             <property name="text">
              <string>admin</string>
