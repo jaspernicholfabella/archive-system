@@ -43,9 +43,14 @@ class Database():
                          Column('attached_alias',VARCHAR(100)),
                          Column('isseen',Boolean,unique=False,default=False),
                          Column('iseditable',Boolean,unique=False,default=False),
-                         Column('filetype', VARCHAR(50)),
+                         Column('filetype', VARCHAR(5)),
                          Column('status',VARCHAR(50)),
-                         Column('status_message',VARCHAR(100)))
+                         Column('status_message',VARCHAR(100)),
+                         Column('reply_have_attached',Boolean,unique=False,default=False),
+                         Column('reply_attached_alias',VARCHAR(100)),
+                         Column('reply_is_editable', Boolean, unique=False, default=False),
+                         Column('reply_filetype', VARCHAR(5)),
+                         )
 
 
     meta.create_all(engine)

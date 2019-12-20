@@ -2,17 +2,26 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6b2ef8dc-b413-4ec4-8608-e5255f119985" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/icons/lock.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/icons/view-details.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/icons/view.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sqlconn.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/add_account.ui" beforeDir="false" afterPath="$PROJECT_DIR$/add_account.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/add_document_type.ui" beforeDir="false" afterPath="$PROJECT_DIR$/add_document_type.ui" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/archive_system.ui" beforeDir="false" afterPath="$PROJECT_DIR$/archive_system.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/icons.qrc" beforeDir="false" afterPath="$PROJECT_DIR$/icons.qrc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/icons_rc.py" beforeDir="false" afterPath="$PROJECT_DIR$/icons_rc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/archive_system.db" beforeDir="false" afterPath="$PROJECT_DIR$/db/archive_system.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/confidential_letter.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/excel_test_2.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/excel_test_2.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/hr_documents_record.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/image_template.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/jasper_fabella_routing_12_18_2019_20_02_26.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/jerric_santamaria_routing_12_18_2019_18_50_55.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/rice_and_corn_stocks.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/rice_and_corn_stocks.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/temp_3.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/temp_pdf_2.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/temporary_document.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/tim_mckinley_routing_12_18_2019_22_15_10.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/word_test.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/word_test.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sqlconn.py" beforeDir="false" afterPath="$PROJECT_DIR$/sqlconn.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />

@@ -16,14 +16,270 @@ ui, _ = loadUiType('archive_system.ui')
 accounts_ui, _ = loadUiType('add_account.ui')
 doctype_ui, _ = loadUiType('add_document_type.ui')
 docinfo_ui, _ = loadUiType('document_information.ui')
+routing_ui, _ = loadUiType('routing.ui')
 #globals
 global settings_account_table
 global settings_doctype_table
 global sharedrive
 global docinfo_selected_item
 global docinfo_dict
+global mail_tab_widget
+global mail_inbox_tab_widget
+global mail_inbox_waiting_approve
+global mail_inbox_waiting_reject
+global mail_inbox_waiting_list
+global mail_inbox_approved_list
+global mail_inbox_rejected_list
+global mail_inbox_text_browser
+global mail_approved_text_browser
+global mail_rejected_text_browser
+global mail_inbox_waiting_view
+global mail_inbox_waiting_attached_name
+global mail_inbox_approved_button_container
+global mail_inbox_approved_comment
+class Routing_Dialogue(QDialog,routing_ui):
+    dir = ''
+    from_who = ''
+    sender = ''
+    edit_id = 0
+    routing_type = ''
+    def __init__(self,parent=None):
+        super(Routing_Dialogue,self).__init__(parent)
+        self.setupUi(self)
 
+    def ShowDialogue(self,id,sender,dir,from_who,routing_type):
+        self.dir = dir
+        self.sender = sender
+        self.edit_id = id
+        self.from_who = from_who
+        self.routing_type = routing_type
+        if routing_type == 'accepted':
+            self.routing_label.setText('Accept Request')
+            self.routing_label_comment.setText('Comments : ')
+        elif routing_type == 'rejected':
+            self.routing_label.setText('Reject Request')
+            self.routing_label_comment.setText('Reasons : ')
 
+        self.buttonBox.accepted.connect(self.mail_urequest_send_action)
+        self.mail_urequest_upload_images.clicked.connect(self.mail_urequest_upload_images_action)
+        self.mail_urequest_upload_documents.clicked.connect(self.mail_urequest_upload_documents_action)
+
+    def mail_urequest_upload_images_action(self):
+        self.mail_urequest_upload_filetype = 'img'
+        self.mail_urequest_upload_list_dictionary = {}
+        self.mail_urequest_upload_list.clear()
+        self.mail_urequest_upload_list.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        image_files, _ = QFileDialog.getOpenFileNames(self, "Open Images",
+                                                      '',
+                                                      "Image File (*.jpg *.png)", options=options)
+        for image_file in image_files:
+            temp = image_file.split('/')
+            self.mail_urequest_upload_list_dictionary.update({temp[len(temp) - 1]: image_file})
+            self.mail_urequest_upload_list.addItem(temp[len(temp) - 1])
+
+    def mail_urequest_upload_documents_action(self):
+        self.mail_urequest_upload_filetype = 'doc'
+        self.mail_urequest_upload_list_dictionary = {}
+        self.mail_urequest_upload_list.clear()
+
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        doc_name, _ = QFileDialog.getOpenFileName(self, "Open Document",
+                                                  '',
+                                                  "Document File (*.docx *.doc *.xls *.xlsx *.pdf)",
+                                                  options=options)
+        temp = doc_name.split('/')
+        self.mail_urequest_upload_list_dictionary.update({temp[len(temp) - 1]: doc_name})
+        self.mail_urequest_upload_list.addItem(temp[len(temp) - 1])
+
+    def mail_urequest_send_action(self):
+        global useraccount
+        have_attached = False
+        filerror = False
+        alias = ''
+        filetype = ''
+        iseditable = False
+
+        if self.mail_urequest_upload_list.count() > 0:
+            if self.mail_urequest_upload_filetype == 'img':
+                have_attached = True
+                filetype = 'pdf'
+                iseditable = False
+                dir = self.dir
+                alias = 'reply_' + str(self.from_who + '-routing-' + datetime.datetime.now().strftime(
+                    "%m_%d_%Y_%H_%M_%S")).replace('-', '_').replace(' ', '_').lower()
+                try:
+                    os.makedirs(dir)
+                except:
+                    print('directory already exists.')
+                pdf = FPDF()
+                for i in range(self.mail_urequest_upload_list.count()):
+                    imageFile = self.mail_urequest_upload_list_dictionary[
+                        self.mail_urequest_upload_list.item(i).text()]
+                    cover = Image.open(imageFile)
+                    width, height = cover.size
+                    width, height = float(width * 0.264583), float(height * 0.264583)
+                    pdf_size = {'P': {'w': 210, 'h': 297}, 'L': {'w': 297, 'h': 210}}
+                    orientation = 'P' if width < height else 'L'
+                    width = width if width < pdf_size[orientation]['w'] else pdf_size[orientation]['w']
+                    height = height if height < pdf_size[orientation]['h'] else pdf_size[orientation]['h']
+                    pdf.add_page(orientation=orientation)
+                    pdf.image(imageFile, 0, 0, width, height)
+                pdf.output(dir + '/' + alias + '.pdf', "F")
+
+            elif self.mail_urequest_upload_filetype == 'doc':
+                have_attached = True
+                filerror = False
+                dir = self.settings_sharedrive_loc.text()
+                alias = str(self.from_who + '-routing-' + datetime.datetime.now().strftime(
+                    "%m_%d_%Y_%H_%M_%S")).replace('-', '_').replace(' ', '_').lower()
+                try:
+                    os.makedirs(dir)
+                except:
+                    print('directory already exists.')
+
+                doc = self.mail_urequest_upload_list_dictionary[self.mail_urequest_upload_list.item(0).text()]
+                if '.doc' in doc or '.docx' in doc:
+                    filetype = 'docx'
+                    iseditable = True
+                    try:
+                        word = win32com.client.gencache.EnsureDispatch("Word.Application")
+                        worddoc = word.Documents.Open(os.path.abspath(doc))
+                        worddoc.SaveAs(os.path.abspath(dir + '\\' + alias + ".pdf"), FileFormat=17)
+                        worddoc.Close()
+                        word.Quit()
+                        shutil.copyfile(os.path.abspath(doc), os.path.abspath(dir + '\\' + alias + '.docx'))
+                    except:
+                        filerror = True
+                        msg = QMessageBox()
+                        msg.setIcon(QMessageBox.Critical)
+                        msg.setText("File Conversion Failed, try Restart Applicaton!")
+                        msg.setInformativeText('File Conversion Error')
+                        msg.setWindowTitle("Error")
+                        msg.exec_()
+                elif '.xls' in doc or '.xlsx' in doc:
+                    have_attached = True
+                    filetype = 'xlsx'
+                    iseditable = True
+                    try:
+                        excel = win32com.client.gencache.EnsureDispatch("Excel.Application")
+                        wb = excel.Workbooks.Open(os.path.abspath(doc))
+                        count = wb.Sheets.Count
+                        ws_index_list = []
+                        for i in range(1, count + 1):
+                            ws_index_list.append(i)
+                        wb.WorkSheets(ws_index_list).Select()
+                        # Save
+                        wb.ActiveSheet.ExportAsFixedFormat(0, os.path.abspath(dir + '\\' + alias + '.pdf'))
+                        wb.Close()
+                        excel.Quit()
+                        shutil.copyfile(os.path.abspath(doc), os.path.abspath(dir + '\\' + alias + '.xlsx'))
+                    except:
+                        filerror = True
+                        msg = QMessageBox()
+                        msg.setIcon(QMessageBox.Critical)
+                        msg.setText("File Conversion Failed, try Restart Applicaton!")
+                        msg.setInformativeText('File Conversion Error')
+                        msg.setWindowTitle("Error")
+                        msg.exec_()
+                elif '.pdf' in doc:
+                    filetype = 'pdf'
+                    iseditable = False
+                    shutil.copyfile(os.path.abspath(doc), os.path.abspath(dir + '\\' + alias + '.pdf'))
+        else:
+            have_attached = False
+
+        if filerror == False:
+            engine = sqc.Database().engine
+            conn = engine.connect()
+            archive_mail = sqc.Database().archive_mail
+            ins = archive_mail.update().where(archive_mail.c.mailid == self.edit_id).\
+                values(
+                sender=useraccount_name,
+                reciever=self.sender,
+                isseen=False,
+                status=self.routing_type,
+                status_message=self.routing_text.toPlainText(),
+                reply_have_attached =have_attached,
+                reply_attached_alias = alias,
+                reply_is_editable = iseditable,
+                reply_filetype = filetype
+            )
+            conn.execute(ins)
+            self.mail_inbox_refresh()
+        else:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Reply was not Sent!")
+            msg.setInformativeText('Something went Wrong')
+            msg.setWindowTitle("Error")
+            msg.exec_()
+
+    mail_inbox_dictionary = {}
+    def mail_inbox_refresh(self):
+        global mail_tab_widget
+        global mail_inbox_tab_widget
+        global mail_inbox_waiting_approve
+        global mail_inbox_waiting_reject
+        global mail_inbox_waiting_list
+        global mail_inbox_approved_list
+        global mail_inbox_rejected_list
+        global mail_inbox_text_browser
+        global mail_approved_text_browser
+        global mail_rejected_text_browser
+        global mail_inbox_waiting_view
+        global mail_inbox_waiting_attached_name
+        global mail_inbox_approved_button_container
+        global mail_inbox_approved_comment
+        mail_inbox_approved_comment.setText('')
+        mail_inbox_approved_button_container.setVisible(False)
+        mail_tab_widget.setCurrentIndex(0)
+        mail_inbox_tab_widget.setCurrentIndex(0)
+        mail_inbox_waiting_approve.setVisible(False)
+        mail_inbox_waiting_reject.setVisible(False)
+        mail_inbox_waiting_list.clear()
+        mail_inbox_approved_list.clear()
+        mail_inbox_rejected_list.clear()
+        mail_inbox_text_browser.setText('')
+        mail_approved_text_browser.setText('')
+        mail_rejected_text_browser.setText('')
+        mail_inbox_waiting_view.setVisible(False)
+        mail_inbox_waiting_attached_name.setText('')
+        engine = sqc.Database().engine
+        conn = engine.connect()
+        archive_mail = sqc.Database().archive_mail
+        s = archive_mail.select()
+        s_value = conn.execute(s)
+
+        for val in s_value:
+            self.mail_inbox_dictionary.update({
+                str(val[0]):{
+                    'sender':val[1],
+                    'reciever':val[2],
+                    'date_sent':val[3],
+                    'from_who':val[4],
+                    'subject':val[5],
+                    'action':val[6],
+                    'have_attached':val[7],
+                    'attached_alias':val[8],
+                    'isseen':val[9],
+                    'iseditable':val[10],
+                    'filetype':val[11],
+                    'status':val[12],
+                    'status_message':val[13]}
+            })
+        self.mail_inbox_dictionary = OrderedDict(sorted(self.mail_inbox_dictionary.items(), reverse=True))
+
+        for key in self.mail_inbox_dictionary.keys():
+            if self.mail_inbox_dictionary[key]['status'] == 'wait':
+                mail_inbox_waiting_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'],key,self.mail_inbox_dictionary[key]['date_sent']))
+            elif self.mail_inbox_dictionary[key]['status'] == 'accepted':
+                mail_inbox_approved_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
+            elif self.mail_inbox_dictionary[key]['status'] == 'rejected':
+                mail_inbox_rejected_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
 
 class Docinfo_Dialogue(QDialog,docinfo_ui):
 
@@ -175,7 +431,6 @@ class MainApp(QMainWindow, ui):
         self.Global_Variables()
         self.Handle_Buttons()
 
-
     def defaults(self):
         self.tabWidget.setCurrentIndex(0)
         self.design_1.setEnabled(False)
@@ -221,6 +476,34 @@ class MainApp(QMainWindow, ui):
         upload_doctype = self.upload_doctype
         global useraccount
         global useraccount_name
+        global mail_tab_widget
+        mail_tab_widget = self.mail_tab_widget
+        global mail_inbox_tab_widget
+        mail_inbox_tab_widget = self.mail_inbox_tab_widget
+        global mail_inbox_waiting_approve
+        mail_inbox_waiting_approve = self.mail_inbox_waiting_approve
+        global mail_inbox_waiting_reject
+        mail_inbox_waiting_reject = self.mail_inbox_waiting_reject
+        global mail_inbox_waiting_list
+        mail_inbox_waiting_list = self.mail_inbox_waiting_list
+        global mail_inbox_approved_list
+        mail_inbox_approved_list = self.mail_inbox_approved_list
+        global mail_inbox_rejected_list
+        mail_inbox_rejected_list = self.mail_inbox_rejected_list
+        global mail_inbox_text_browser
+        mail_inbox_text_browser = self.mail_inbox_text_browser
+        global mail_approved_text_browser
+        mail_approved_text_browser = self.mail_approved_text_browser
+        global mail_rejected_text_browser
+        mail_rejected_text_browser = self.mail_rejected_text_browser
+        global mail_inbox_waiting_view
+        mail_inbox_waiting_view = self.mail_inbox_waiting_view
+        global mail_inbox_waiting_attached_name
+        mail_inbox_waiting_attached_name = self.mail_inbox_waiting_attached_name
+        global mail_inbox_approved_button_container
+        mail_inbox_approved_button_container = self.mail_inbox_approved_button_container
+        global mail_inbox_approved_comment
+        mail_inbox_approved_comment = self.mail_inbox_approved_comment
 
     def Handle_UI_Changes(self):
 
@@ -295,13 +578,14 @@ class MainApp(QMainWindow, ui):
         self.mail_urequest_upload_documents.clicked.connect(self.mail_urequest_upload_documents_action)
         self.mail_urequest_send.clicked.connect(self.mail_urequest_send_action)
         self.mail_inbox_waiting_list.clicked.connect(self.mail_inbox_waiting_list_action)
-
-
+        self.mail_inbox_waiting_view.clicked.connect(self.mail_inbox_waiting_view_action)
+        self.mail_inbox_waiting_approve.clicked.connect(self.mail_inbox_waiting_approve_action)
+        self.mail_inbox_waiting_reject.clicked.connect(self.mail_inbox_waiting_reject_action)
+        self.mail_inbox_approved_list.clicked.connect(self.mail_inbox_approved_list_action)
+        self.mail_inbox_approved_view.clicked.connect(self.mail_inbox_approved_view_action)
 
     ##
     # DOCK
-
-
     def dock_exit_action(self):
         buttonReply = QMessageBox.question(self, '', "Are you sure you want to Exit?",
                                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
@@ -508,7 +792,6 @@ class MainApp(QMainWindow, ui):
 
         conn.execute(s)
         self.show_settings()
-
 
     ##
     # UPLOAD
@@ -896,8 +1179,6 @@ class MainApp(QMainWindow, ui):
     def archive_search_historically_action(self):
         pass
 
-
-
     ##MAIL
     def dock_messages_action(self):
         self.tabWidget.setCurrentIndex(3)
@@ -917,6 +1198,7 @@ class MainApp(QMainWindow, ui):
         self.mail_inbox_waiting_approve.setVisible(False)
         self.mail_inbox_button_action()
 
+
     def mail_request_button_action(self):
         self.mail_tab_widget.setCurrentIndex(3)
         self.mail_urequest_from.setText('')
@@ -931,8 +1213,6 @@ class MainApp(QMainWindow, ui):
         s_value = conn.execute(s)
         for val in s_value:
             self.mail_urequest_combo.addItem(val[1])
-
-
 
     mail_urequest_upload_list_dictionary = {}
     mail_urequest_upload_filetype = ''
@@ -1003,7 +1283,7 @@ class MainApp(QMainWindow, ui):
                 have_attached = True
                 filerror = False
                 dir = self.settings_sharedrive_loc.text()
-                alias = str(self.mail_urequest_from.text() + '-routing-'+datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")).replace('-', '_').replace(' ', '_').lower()
+                alias = str(self.mail_urequest_from.text() + '-routing-'+datetime.datetime.now().strftime("%m_%d_%Y_%H_%M_%S")).replace('-', '_').replace(' ', '_').lower()
                 try:
                     os.makedirs(dir)
                 except:
@@ -1014,7 +1294,7 @@ class MainApp(QMainWindow, ui):
                     filetype = 'docx'
                     iseditable = True
                     try:
-                        word = win32com.client.DispatchEx("Word.Application")
+                        word = win32com.client.gencache.EnsureDispatch("Word.Application")
                         worddoc = word.Documents.Open(os.path.abspath(doc))
                         worddoc.SaveAs(os.path.abspath(dir+'\\'+alias+".pdf"), FileFormat=17)
                         worddoc.Close()
@@ -1033,7 +1313,7 @@ class MainApp(QMainWindow, ui):
                     filetype = 'xlsx'
                     iseditable = True
                     try:
-                        excel = win32com.client.DispatchEx("Excel.Application")
+                        excel = win32com.client.gencache.EnsureDispatch("Excel.Application")
                         wb = excel.Workbooks.Open(os.path.abspath(doc))
                         count = wb.Sheets.Count
                         ws_index_list = []
@@ -1077,7 +1357,9 @@ class MainApp(QMainWindow, ui):
                 iseditable = iseditable,
                 filetype = filetype,
                 status = 'wait',
-                status_message=''
+                status_message='',
+                reply_have_attached=False,
+                reply_attached_alias=False
             )
             conn.execute(ins)
             msg = QMessageBox()
@@ -1116,12 +1398,20 @@ class MainApp(QMainWindow, ui):
 
     mail_inbox_dictionary = {}
     def mail_inbox_button_action(self):
+        self.mail_inbox_approved_comment.setText('')
+        self.mail_inbox_approved_button_container.setVisible(False)
+        self.mail_inbox_waiting_view.setVisible(False)
+        self.mail_inbox_waiting_attached_name.setText('')
         self.mail_tab_widget.setCurrentIndex(0)
         self.mail_inbox_tab_widget.setCurrentIndex(0)
+        self.mail_inbox_waiting_approve.setVisible(False)
+        self.mail_inbox_waiting_reject.setVisible(False)
         self.mail_inbox_text_browser.setText('')
         self.mail_approved_text_browser.setText('')
         self.mail_rejected_text_browser.setText('')
         self.mail_inbox_waiting_list.clear()
+        self.mail_inbox_approved_list.clear()
+        self.mail_inbox_rejected_list.clear()
         engine = sqc.Database().engine
         conn = engine.connect()
         archive_mail = sqc.Database().archive_mail
@@ -1143,37 +1433,131 @@ class MainApp(QMainWindow, ui):
                     'iseditable':val[10],
                     'filetype':val[11],
                     'status':val[12],
-                    'status_message':val[13]}
+                    'status_message':val[13],
+                    'reply_have_attached':val[14],
+                    'reply_attached_alias':val[15],
+                    'reply_is_editable':val[16],
+                    'reply_filetype':val[17]
+
+                }
             })
         self.mail_inbox_dictionary = OrderedDict(sorted(self.mail_inbox_dictionary.items(), reverse=True))
 
         for key in self.mail_inbox_dictionary.keys():
             if self.mail_inbox_dictionary[key]['status'] == 'wait':
                 self.mail_inbox_waiting_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'],key,self.mail_inbox_dictionary[key]['date_sent']))
+            elif self.mail_inbox_dictionary[key]['status'] == 'accepted':
+                self.mail_inbox_approved_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
+            elif self.mail_inbox_dictionary[key]['status'] == 'rejected':
+                self.mail_inbox_rejected_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
 
     def mail_inbox_waiting_list_action(self):
+        global useraccount
+        self.mail_inbox_waiting_view.setVisible(True)
         temp = self.mail_inbox_waiting_list.currentItem().text()
         temp = temp.split('(')[1]
         temp = temp.split(')')[0]
         id = temp.replace('MSGID','')
         self.mail_inbox_text_browser.setText(self.mail_inbox_text_browser_source(self.mail_inbox_dictionary[id]['date_sent'],self.mail_inbox_dictionary[id]['from_who'],self.mail_inbox_dictionary[id]['subject'],self.mail_inbox_dictionary[id]['action']))
         self.mail_inbox_waiting_attached_name.setText(str(self.mail_inbox_dictionary[id]['attached_alias']))
-        print(self.mail_inbox_dictionary[id]['have_attached'])
+
         if self.mail_inbox_dictionary[id]['have_attached'] == False:
             self.mail_inbox_waiting_view.setVisible(False)
         else:
             self.mail_inbox_waiting_view.setVisible(True)
+
+        if useraccount == 'admin':
+            self.mail_inbox_waiting_approve.setVisible(True)
+            self.mail_inbox_waiting_reject.setVisible(True)
 
     def mail_inbox_waiting_view_action(self):
         temp = self.mail_inbox_waiting_list.currentItem().text()
         temp = temp.split('(')[1]
         temp = temp.split(')')[0]
         id = temp.replace('MSGID', '')
+        dir = self.settings_sharedrive_loc.text()
+        alias = self.mail_inbox_dictionary[id]['attached_alias']
+        filetype =self.mail_inbox_dictionary[id]['filetype']
+        os.startfile(os.path.abspath(dir+'\\'+alias+'.'+filetype))
 
+    def mail_inbox_waiting_approve_action(self):
 
+        name = ''
+        temp = self.mail_inbox_waiting_list.currentItem().text()
+        temp = temp.split('(')[1]
+        temp = temp.split(')')[0]
+        id = temp.replace('MSGID', '')
+        engine = sqc.Database().engine
+        conn = engine.connect()
+        archive_mail = sqc.Database().archive_mail
+        s = archive_mail.select().where(archive_mail.c.mailid == id)
+        s_value = conn.execute(s)
+        for val in s_value:
+            name = val[1]
+            from_who = val[4]
+        try:
+            ad = Routing_Dialogue(self)
+            ad.show()
+            ad.ShowDialogue(id,name,self.settings_sharedrive_loc.text(),from_who,'accepted')
+        except:
+            pass
 
+    def mail_inbox_waiting_reject_action(self):
 
+        name = ''
+        temp = self.mail_inbox_waiting_list.currentItem().text()
+        temp = temp.split('(')[1]
+        temp = temp.split(')')[0]
+        id = temp.replace('MSGID', '')
+        engine = sqc.Database().engine
+        conn = engine.connect()
+        archive_mail = sqc.Database().archive_mail
+        s = archive_mail.select().where(archive_mail.c.mailid == id)
+        s_value = conn.execute(s)
+        for val in s_value:
+            name = val[1]
+            from_who = val[4]
+        try:
+            ad = Routing_Dialogue(self)
+            ad.show()
+            ad.ShowDialogue(id,name,self.settings_sharedrive_loc.text(),from_who,'rejected')
+        except:
+            pass
 
+    def mail_inbox_approved_list_action(self):
+        global useraccount
+        self.mail_inbox_approved_button_container.setVisible(True)
+        temp = self.mail_inbox_approved_list.currentItem().text()
+        temp = temp.split('(')[1]
+        temp = temp.split(')')[0]
+        id = temp.replace('MSGID','')
+        self.mail_approved_text_browser.setText(self.mail_inbox_text_browser_source(self.mail_inbox_dictionary[id]['date_sent'],self.mail_inbox_dictionary[id]['from_who'],self.mail_inbox_dictionary[id]['subject'],self.mail_inbox_dictionary[id]['action']))
+        self.mail_inbox_approved_comment.setPlainText(self.mail_inbox_dictionary[id]['status_message'])
+
+        if self.mail_inbox_dictionary[id]['reply_have_attached'] == False:
+            self.mail_inbox_approved_view.setVisible(False)
+            self.mail_inbox_approved_save.setVisible(False)
+            if useraccount != 'admin':
+                self.mail_inbox_approved_delete.setVisible(False)
+            else:
+                self.mail_inbox_approved_delete.setVisible(True)
+        else:
+            self.mail_inbox_approved_view.setVisible(True)
+            self.mail_inbox_approved_save.setVisible(True)
+            if useraccount != 'admin':
+                self.mail_inbox_approved_delete.setVisible(False)
+            else:
+                self.mail_inbox_approved_delete.setVisible(True)
+
+    def mail_inbox_approved_view_action(self):
+        temp = self.mail_inbox_approved_list.currentItem().text()
+        temp = temp.split('(')[1]
+        temp = temp.split(')')[0]
+        id = temp.replace('MSGID', '')
+        dir = self.settings_sharedrive_loc.text()
+        alias = self.mail_inbox_dictionary[id]['reply_attached_alias']
+        filetype =self.mail_inbox_dictionary[id]['reply_filetype']
+        os.startfile(os.path.abspath(dir+'\\'+alias+'.'+filetype))
 
 
 
