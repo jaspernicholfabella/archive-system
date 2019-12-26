@@ -17,7 +17,10 @@ accounts_ui, _ = loadUiType('add_account.ui')
 doctype_ui, _ = loadUiType('add_document_type.ui')
 docinfo_ui, _ = loadUiType('document_information.ui')
 routing_ui, _ = loadUiType('routing.ui')
+upload_ui, _ = loadUiType('save_to_archive.ui')
 #globals
+global useraccount
+global useraccount_name
 global settings_account_table
 global settings_doctype_table
 global sharedrive
@@ -37,6 +40,8 @@ global mail_inbox_waiting_view
 global mail_inbox_waiting_attached_name
 global mail_inbox_approved_button_container
 global mail_inbox_approved_comment
+
+
 class Routing_Dialogue(QDialog,routing_ui):
     dir = ''
     from_who = ''
@@ -474,8 +479,7 @@ class MainApp(QMainWindow, ui):
         archive_options = self.archive_options
         global upload_doctype
         upload_doctype = self.upload_doctype
-        global useraccount
-        global useraccount_name
+
         global mail_tab_widget
         mail_tab_widget = self.mail_tab_widget
         global mail_inbox_tab_widget
@@ -527,7 +531,8 @@ class MainApp(QMainWindow, ui):
         #mail
         self.mail_tab_widget.setCurrentIndex(0)
         self.mail_inbox_tab_widget.setCurrentIndex(0)
-
+        self.mail_compose_button.setVisible(False)
+        self.mail_chat_button.setVisible(False)
 
     def Handle_Buttons(self):
         QtWebEngineWidgets.QWebEngineProfile.defaultProfile().downloadRequested.connect(self.on_download_request)
@@ -572,7 +577,6 @@ class MainApp(QMainWindow, ui):
         # mail
         self.mail_inbox_button.clicked.connect(self.mail_inbox_button_action)
         self.mail_compose_button.clicked.connect(lambda: self.mail_tab_widget.setCurrentIndex(1))
-        self.mail_chat_button.clicked.connect(lambda: self.mail_tab_widget.setCurrentIndex(2))
         self.mail_request_button.clicked.connect(self.mail_request_button_action)
         self.mail_urequest_upload_images.clicked.connect(self.mail_urequest_upload_images_action)
         self.mail_urequest_upload_documents.clicked.connect(self.mail_urequest_upload_documents_action)
@@ -583,6 +587,10 @@ class MainApp(QMainWindow, ui):
         self.mail_inbox_waiting_reject.clicked.connect(self.mail_inbox_waiting_reject_action)
         self.mail_inbox_approved_list.clicked.connect(self.mail_inbox_approved_list_action)
         self.mail_inbox_approved_view.clicked.connect(self.mail_inbox_approved_view_action)
+        # chat
+        self.mail_compose_button.clicked.connect(self.mail_compose_button_action)
+        self.mail_compose_upload_images.clicked.connect(self.mail_compose_upload_images_action)
+        self.mail_compose_upload_documents.clicked.connect(self.mail_compose_upload_documents_action)
 
     ##
     # DOCK
@@ -1398,7 +1406,7 @@ class MainApp(QMainWindow, ui):
 
     mail_inbox_dictionary = {}
     def mail_inbox_button_action(self):
-        self.mail_inbox_approved_comment.setText('')
+        self.mail_inbox_approved_comment.setPlainText('')
         self.mail_inbox_approved_button_container.setVisible(False)
         self.mail_inbox_waiting_view.setVisible(False)
         self.mail_inbox_waiting_attached_name.setText('')
@@ -1536,14 +1544,14 @@ class MainApp(QMainWindow, ui):
 
         if self.mail_inbox_dictionary[id]['reply_have_attached'] == False:
             self.mail_inbox_approved_view.setVisible(False)
-            self.mail_inbox_approved_save.setVisible(False)
+            #self.mail_inbox_approved_save.setVisible(False)
             if useraccount != 'admin':
                 self.mail_inbox_approved_delete.setVisible(False)
             else:
                 self.mail_inbox_approved_delete.setVisible(True)
         else:
             self.mail_inbox_approved_view.setVisible(True)
-            self.mail_inbox_approved_save.setVisible(True)
+            #self.mail_inbox_approved_save.setVisible(True)
             if useraccount != 'admin':
                 self.mail_inbox_approved_delete.setVisible(False)
             else:
@@ -1558,6 +1566,194 @@ class MainApp(QMainWindow, ui):
         alias = self.mail_inbox_dictionary[id]['reply_attached_alias']
         filetype =self.mail_inbox_dictionary[id]['reply_filetype']
         os.startfile(os.path.abspath(dir+'\\'+alias+'.'+filetype))
+
+    ##COMPOSE
+    def mail_compose_refresh(self):
+        self.mail_compose_subject.setText('')
+        self.mail_compose_content.setPlainText('')
+        self.mail_compose_upload_list.clear()
+
+    def mail_compose_button_action(self):
+        global useraccount
+        self.mail_tab_widget.setCurrentIndex(1)
+        engine = sqc.Database().engine
+        conn = engine.connect()
+        archive_admin = sqc.Database().archive_admin
+        if useraccount == 'user':
+            s = archive_admin.select().where(archive_admin.c.previlage == 'admin')
+        elif useraccount == 'admin':
+            s = archive_admin.select().where(archive_admin.c.previlage == 'user')
+        s_value = conn.execute(s)
+        for val in s_value:
+            self.mail_compose_combo.addItem(val[1])
+        self.mail_compose_refresh()
+
+    mail_compose_upload_list_dictionary = {}
+    mail_compose_upload_filetype = ''
+
+    def mail_compose_upload_images_action(self):
+        self.mail_compose_upload_filetype = 'img'
+        self.mail_compose_upload_list_dictionary = {}
+        self.mail_compose_upload_list.clear()
+        self.mail_compose_upload_list.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        image_files, _ = QFileDialog.getOpenFileNames(self, "Open Images",
+                                                      '',
+                                                      "Image File (*.jpg *.png)", options=options)
+        for image_file in image_files:
+            temp = image_file.split('/')
+            self.mail_compose_upload_list_dictionary.update({temp[len(temp) - 1]: image_file})
+            self.mail_compose_upload_list.addItem(temp[len(temp) - 1])
+
+    def mail_compose_upload_documents_action(self):
+        self.mail_compose_upload_filetype = 'doc'
+        self.mail_compose_upload_list_dictionary = {}
+        self.mail_compose_upload_list.clear()
+
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        doc_name, _ = QFileDialog.getOpenFileName(self, "Open Document",
+                                                  '',
+                                                  "Document File (*.docx *.doc *.xls *.xlsx *.pdf)", options=options)
+        temp = doc_name.split('/')
+        self.mail_compose_upload_list_dictionary.update({temp[len(temp) - 1]: doc_name})
+        self.mail_compose_upload_list.addItem(temp[len(temp) - 1])
+
+    def mail_compose_send_action(self):
+        global useraccount_name
+        have_attached = False
+        filerror = False
+        alias = ''
+        filetype = ''
+        iseditable = False
+
+        if self.mail_compose_upload_list.count() > 0:
+            if self.mail_compose_upload_filetype == 'img':
+                have_attached = True
+                filetype = 'pdf'
+                iseditable = False
+                dir = self.settings_sharedrive_loc.text()
+                alias = str('message-' + datetime.datetime.now().strftime(
+                    "%m_%d_%Y_%H_%M_%S")).replace('-', '_').replace(' ', '_').lower()
+                try:
+                    os.makedirs(dir)
+                except:
+                    print('directory already exists.')
+                pdf = FPDF()
+                for i in range(self.mail_urequest_upload_list.count()):
+                    imageFile = self.mail_urequest_upload_list_dictionary[self.mail_urequest_upload_list.item(i).text()]
+                    cover = Image.open(imageFile)
+                    width, height = cover.size
+                    width, height = float(width * 0.264583), float(height * 0.264583)
+                    pdf_size = {'P': {'w': 210, 'h': 297}, 'L': {'w': 297, 'h': 210}}
+                    orientation = 'P' if width < height else 'L'
+                    width = width if width < pdf_size[orientation]['w'] else pdf_size[orientation]['w']
+                    height = height if height < pdf_size[orientation]['h'] else pdf_size[orientation]['h']
+                    pdf.add_page(orientation=orientation)
+                    pdf.image(imageFile, 0, 0, width, height)
+                pdf.output(dir + '/' + alias + '.pdf', "F")
+
+            elif self.mail_urequest_upload_filetype == 'doc':
+                have_attached = True
+                filerror = False
+                dir = self.settings_sharedrive_loc.text()
+                alias = str(self.mail_urequest_from.text() + '-routing-' + datetime.datetime.now().strftime(
+                    "%m_%d_%Y_%H_%M_%S")).replace('-', '_').replace(' ', '_').lower()
+                try:
+                    os.makedirs(dir)
+                except:
+                    print('directory already exists.')
+
+                doc = self.mail_urequest_upload_list_dictionary[self.mail_urequest_upload_list.item(0).text()]
+                if '.doc' in doc or '.docx' in doc:
+                    filetype = 'docx'
+                    iseditable = True
+                    try:
+                        word = win32com.client.gencache.EnsureDispatch("Word.Application")
+                        worddoc = word.Documents.Open(os.path.abspath(doc))
+                        worddoc.SaveAs(os.path.abspath(dir + '\\' + alias + ".pdf"), FileFormat=17)
+                        worddoc.Close()
+                        word.Quit()
+                        shutil.copyfile(os.path.abspath(doc), os.path.abspath(dir + '\\' + alias + '.docx'))
+                    except:
+                        filerror = True
+                        msg = QMessageBox()
+                        msg.setIcon(QMessageBox.Critical)
+                        msg.setText("File Conversion Failed, try Restart Applicaton!")
+                        msg.setInformativeText('File Conversion Error')
+                        msg.setWindowTitle("Error")
+                        msg.exec_()
+                elif '.xls' in doc or '.xlsx' in doc:
+                    have_attached = True
+                    filetype = 'xlsx'
+                    iseditable = True
+                    try:
+                        excel = win32com.client.gencache.EnsureDispatch("Excel.Application")
+                        wb = excel.Workbooks.Open(os.path.abspath(doc))
+                        count = wb.Sheets.Count
+                        ws_index_list = []
+                        for i in range(1, count + 1):
+                            ws_index_list.append(i)
+                        wb.WorkSheets(ws_index_list).Select()
+                        # Save
+                        wb.ActiveSheet.ExportAsFixedFormat(0, os.path.abspath(dir + '\\' + alias + '.pdf'))
+                        wb.Close()
+                        excel.Quit()
+                        shutil.copyfile(os.path.abspath(doc), os.path.abspath(dir + '\\' + alias + '.xlsx'))
+                    except:
+                        filerror = True
+                        msg = QMessageBox()
+                        msg.setIcon(QMessageBox.Critical)
+                        msg.setText("File Conversion Failed, try Restart Applicaton!")
+                        msg.setInformativeText('File Conversion Error')
+                        msg.setWindowTitle("Error")
+                        msg.exec_()
+                elif '.pdf' in doc:
+                    filetype = 'pdf'
+                    iseditable = False
+                    shutil.copyfile(os.path.abspath(doc), os.path.abspath(dir + '\\' + alias + '.pdf'))
+        else:
+            have_attached = False
+
+        if filerror == False:
+            engine = sqc.Database().engine
+            conn = engine.connect()
+            archive_mail = sqc.Database().archive_mail
+            ins = archive_mail.insert().values(
+                sender=useraccount_name,
+                reciever=self.mail_urequest_combo.currentText(),
+                date_sent=datetime.datetime.utcnow(),
+                from_who=self.mail_urequest_from.text(),
+                subject=self.mail_urequest_subject.toPlainText(),
+                action=self.mail_urequest_action_to_be_taken.toPlainText(),
+                have_attached=have_attached,
+                attached_alias=alias,
+                isseen=False,
+                iseditable=iseditable,
+                filetype=filetype,
+                status='wait',
+                status_message='',
+                reply_have_attached=False,
+                reply_attached_alias=False
+            )
+            conn.execute(ins)
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("Message Sent ot {}!".format(self.mail_urequest_combo.currentText()))
+            msg.setWindowTitle("Info")
+            msg.exec_()
+
+            self.mail_request_button_action()
+        else:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Message Not Sent!")
+            msg.setInformativeText('Something went Wrong')
+            msg.setWindowTitle("Error")
+            msg.exec_()
+
 
 
 

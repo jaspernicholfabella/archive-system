@@ -52,6 +52,23 @@ class Database():
                          Column('reply_filetype', VARCHAR(5)),
                          )
 
+    archive_chat = Table('archive_chat',meta,
+                         Column('mailid',INTEGER,primary_key = True),
+                         Column('sender',VARCHAR(50)),
+                         Column('reciever',VARCHAR(50)),
+                         Column('date_sent',Date),
+                         Column('from_who',VARCHAR(30)),
+                         Column('subject',Text),
+                         Column('action',Text),
+                         Column('have_attached',Boolean,unique=False,default=False),
+                         Column('attached_alias',VARCHAR(100)),
+                         Column('isseen',Boolean,unique=False,default=False),
+                         Column('iseditable',Boolean,unique=False,default=False),
+                         Column('filetype', VARCHAR(5)),
+                         )
+
+
+
 
     meta.create_all(engine)
 
