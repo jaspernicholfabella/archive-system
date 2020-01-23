@@ -1759,7 +1759,7 @@ p, li { white-space: pre-wrap; }
                  </widget>
                  <widget class="QWidget" name="tab_8">
                   <attribute name="title">
-                   <string>Rejected</string>
+                   <string>Others</string>
                   </attribute>
                   <layout class="QVBoxLayout" name="verticalLayout_12">
                    <item>

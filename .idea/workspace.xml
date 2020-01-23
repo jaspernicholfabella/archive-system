@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="6b2ef8dc-b413-4ec4-8608-e5255f119985" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/archive_system.ui" beforeDir="false" afterPath="$PROJECT_DIR$/archive_system.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db/archive_system.db" beforeDir="false" afterPath="$PROJECT_DIR$/db/archive_system.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/jerric_atonia_routing_12_20_2019_00_06_19.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/reply_jerric_atonia_routing_12_20_2019_00_06_40.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/test.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sqlconn.py" beforeDir="false" afterPath="$PROJECT_DIR$/sqlconn.py" afterDir="false" />
-    </list>
+    <list default="true" id="6b2ef8dc-b413-4ec4-8608-e5255f119985" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -182,27 +173,27 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>265</line>
+          <line>267</line>
           <option name="timeStamp" value="76" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>266</line>
+          <line>268</line>
           <option name="timeStamp" value="77" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>267</line>
+          <line>269</line>
           <option name="timeStamp" value="78" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>269</line>
+          <line>271</line>
           <option name="timeStamp" value="79" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>270</line>
+          <line>272</line>
           <option name="timeStamp" value="80" />
         </line-breakpoint>
       </breakpoints>
