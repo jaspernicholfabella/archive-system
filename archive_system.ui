@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>808</width>
-    <height>590</height>
+    <width>920</width>
+    <height>670</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -1154,7 +1154,7 @@ color: rgb(255, 255, 255);</string>
            <property name="geometry">
             <rect>
              <x>60</x>
-             <y>10</y>
+             <y>20</y>
              <width>641</width>
              <height>31</height>
             </rect>
@@ -1389,7 +1389,7 @@ background-color: rgb(85, 82, 107);</string>
                   <string notr="true">background-color: rgb(255, 255, 255);</string>
                  </property>
                  <property name="currentIndex">
-                  <number>1</number>
+                  <number>2</number>
                  </property>
                  <widget class="QWidget" name="tab_6">
                   <attribute name="title">
@@ -1575,7 +1575,7 @@ color: rgb(255, 255, 255);</string>
 color: rgb(255, 255, 255);</string>
                            </property>
                            <property name="text">
-                            <string>Reject</string>
+                            <string>Other</string>
                            </property>
                           </widget>
                          </item>
@@ -1728,7 +1728,7 @@ p, li { white-space: pre-wrap; }
                              </rect>
                             </property>
                             <property name="toolTip">
-                             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save Attached File to Archive&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                             <string>View Attached File</string>
                             </property>
                             <property name="text">
                              <string/>
@@ -1840,29 +1840,29 @@ p, li { white-space: pre-wrap; }
                             </font>
                            </property>
                            <property name="text">
-                            <string>Reasons : </string>
+                            <string>Comments : </string>
                            </property>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QPlainTextEdit" name="plainTextEdit_6">
+                          <widget class="QPlainTextEdit" name="mail_inbox_rejected_comment">
                            <property name="readOnly">
                             <bool>true</bool>
                            </property>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QWidget" name="widget_26" native="true">
+                          <widget class="QWidget" name="mail_inbox_rejected_button_container" native="true">
                            <property name="minimumSize">
                             <size>
                              <width>0</width>
                              <height>30</height>
                             </size>
                            </property>
-                           <widget class="QPushButton" name="pushButton_34">
+                           <widget class="QPushButton" name="mail_inbox_rejected_delete">
                             <property name="geometry">
                              <rect>
-                              <x>0</x>
+                              <x>40</x>
                               <y>0</y>
                               <width>41</width>
                               <height>31</height>
@@ -1882,6 +1882,35 @@ p, li { white-space: pre-wrap; }
                              <size>
                               <width>25</width>
                               <height>25</height>
+                             </size>
+                            </property>
+                            <property name="flat">
+                             <bool>true</bool>
+                            </property>
+                           </widget>
+                           <widget class="QPushButton" name="mail_inbox_rejected_reply">
+                            <property name="geometry">
+                             <rect>
+                              <x>0</x>
+                              <y>0</y>
+                              <width>41</width>
+                              <height>31</height>
+                             </rect>
+                            </property>
+                            <property name="toolTip">
+                             <string>Reply to Comment</string>
+                            </property>
+                            <property name="text">
+                             <string/>
+                            </property>
+                            <property name="icon">
+                             <iconset resource="icons.qrc">
+                              <normaloff>:/icons/chat-message.png</normaloff>:/icons/chat-message.png</iconset>
+                            </property>
+                            <property name="iconSize">
+                             <size>
+                              <width>20</width>
+                              <height>20</height>
                              </size>
                             </property>
                             <property name="flat">
@@ -2206,7 +2235,7 @@ color: rgb(255, 255, 255);</string>
                   <string notr="true">background-color: rgb(255, 255, 255);</string>
                  </property>
                  <property name="currentIndex">
-                  <number>0</number>
+                  <number>1</number>
                  </property>
                  <widget class="QWidget" name="tab_13">
                   <attribute name="title">

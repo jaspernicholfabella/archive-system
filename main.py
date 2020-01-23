@@ -18,6 +18,8 @@ doctype_ui, _ = loadUiType('add_document_type.ui')
 docinfo_ui, _ = loadUiType('document_information.ui')
 routing_ui, _ = loadUiType('routing.ui')
 upload_ui, _ = loadUiType('save_to_archive.ui')
+reply_ui , _ = loadUiType('reply.ui')
+
 #globals
 global useraccount
 global useraccount_name
@@ -33,6 +35,7 @@ global mail_inbox_waiting_reject
 global mail_inbox_waiting_list
 global mail_inbox_approved_list
 global mail_inbox_rejected_list
+global mail_inbox_rejected_comment
 global mail_inbox_text_browser
 global mail_approved_text_browser
 global mail_rejected_text_browser
@@ -40,6 +43,50 @@ global mail_inbox_waiting_view
 global mail_inbox_waiting_attached_name
 global mail_inbox_approved_button_container
 global mail_inbox_approved_comment
+
+class Reply_Dialogue(QDialog,reply_ui):
+    def __init__(self,parent=None):
+        super(Reply_Dialogue,self).__init__(parent)
+        self.setupUi(self)
+        self.buttonBox.accepted.connect(self.ok_button)
+
+    def ok_button(self):
+        global mail_inbox_rejected_list
+        global mail_inbox_rejected_comment
+        global useraccount_name
+        comment = ''
+        temp = mail_inbox_rejected_list.currentItem().text()
+        temp = temp.split('(')[1]
+        temp = temp.split(')')[0]
+        id = int(temp.replace('MSGID', ''))
+        engine = sqc.Database().engine
+        conn = engine.connect()
+        archive_mail = sqc.Database().archive_mail
+        s = archive_mail.select().where(archive_mail.c.mailid == id)
+        s_value = conn.execute(s)
+        for val in s_value:
+            comment = val[13]
+
+        basedate = str(datetime.datetime.utcnow()).split('.')[0]
+        formatfrom='%Y-%m-%d %H:%M:%S'
+        formatto = '%a %d %b %Y, %I:%M %p'
+        date = datetime.datetime.strptime(basedate,formatfrom).strftime(formatto)
+        comment = '{}||-------------| {} .. {} | {}'.format(comment,useraccount_name,date,self.comment_box.toPlainText())
+        u = archive_mail.update().where(archive_mail.c.mailid == id).values(status_message = comment,)
+        conn.execute(u)
+
+        s = archive_mail.select().where(archive_mail.c.mailid == id)
+        s_value = conn.execute(s)
+        for val in s_value:
+            comment = val[13]
+
+        comment_arr = comment.split('|')
+        mail_inbox_rejected_comment.clear()
+        if str(type(comment_arr)) == "<class 'list'>":
+            for c in comment_arr:
+                mail_inbox_rejected_comment.appendPlainText(c)
+        else:
+            mail_inbox_rejected_comment.setPlainText(comment_arr)
 
 
 class Routing_Dialogue(QDialog,routing_ui):
@@ -62,8 +109,8 @@ class Routing_Dialogue(QDialog,routing_ui):
             self.routing_label.setText('Accept Request')
             self.routing_label_comment.setText('Comments : ')
         elif routing_type == 'rejected':
-            self.routing_label.setText('Reject Request')
-            self.routing_label_comment.setText('Reasons : ')
+            self.routing_label.setText('Other Issue')
+            self.routing_label_comment.setText('Comment : ')
 
         self.buttonBox.accepted.connect(self.mail_urequest_send_action)
         self.mail_urequest_upload_images.clicked.connect(self.mail_urequest_upload_images_action)
@@ -109,6 +156,7 @@ class Routing_Dialogue(QDialog,routing_ui):
         iseditable = False
 
         if self.mail_urequest_upload_list.count() > 0:
+            global sharedrive
             if self.mail_urequest_upload_filetype == 'img':
                 have_attached = True
                 filetype = 'pdf'
@@ -138,7 +186,7 @@ class Routing_Dialogue(QDialog,routing_ui):
             elif self.mail_urequest_upload_filetype == 'doc':
                 have_attached = True
                 filerror = False
-                dir = self.settings_sharedrive_loc.text()
+                dir = sharedrive
                 alias = str(self.from_who + '-routing-' + datetime.datetime.now().strftime(
                     "%m_%d_%Y_%H_%M_%S")).replace('-', '_').replace(' ', '_').lower()
                 try:
@@ -225,66 +273,69 @@ class Routing_Dialogue(QDialog,routing_ui):
 
     mail_inbox_dictionary = {}
     def mail_inbox_refresh(self):
-        global mail_tab_widget
-        global mail_inbox_tab_widget
-        global mail_inbox_waiting_approve
-        global mail_inbox_waiting_reject
-        global mail_inbox_waiting_list
-        global mail_inbox_approved_list
-        global mail_inbox_rejected_list
-        global mail_inbox_text_browser
-        global mail_approved_text_browser
-        global mail_rejected_text_browser
-        global mail_inbox_waiting_view
-        global mail_inbox_waiting_attached_name
-        global mail_inbox_approved_button_container
-        global mail_inbox_approved_comment
-        mail_inbox_approved_comment.setText('')
-        mail_inbox_approved_button_container.setVisible(False)
-        mail_tab_widget.setCurrentIndex(0)
-        mail_inbox_tab_widget.setCurrentIndex(0)
-        mail_inbox_waiting_approve.setVisible(False)
-        mail_inbox_waiting_reject.setVisible(False)
-        mail_inbox_waiting_list.clear()
-        mail_inbox_approved_list.clear()
-        mail_inbox_rejected_list.clear()
-        mail_inbox_text_browser.setText('')
-        mail_approved_text_browser.setText('')
-        mail_rejected_text_browser.setText('')
-        mail_inbox_waiting_view.setVisible(False)
-        mail_inbox_waiting_attached_name.setText('')
-        engine = sqc.Database().engine
-        conn = engine.connect()
-        archive_mail = sqc.Database().archive_mail
-        s = archive_mail.select()
-        s_value = conn.execute(s)
+        try:
+            global mail_tab_widget
+            global mail_inbox_tab_widget
+            global mail_inbox_waiting_approve
+            global mail_inbox_waiting_reject
+            global mail_inbox_waiting_list
+            global mail_inbox_approved_list
+            global mail_inbox_rejected_list
+            global mail_inbox_text_browser
+            global mail_approved_text_browser
+            global mail_rejected_text_browser
+            global mail_inbox_waiting_view
+            global mail_inbox_waiting_attached_name
+            global mail_inbox_approved_button_container
+            global mail_inbox_approved_comment
+            mail_inbox_approved_comment.setPlainText('')
+            mail_inbox_approved_button_container.setVisible(False)
+            mail_tab_widget.setCurrentIndex(0)
+            mail_inbox_tab_widget.setCurrentIndex(0)
+            mail_inbox_waiting_approve.setVisible(False)
+            mail_inbox_waiting_reject.setVisible(False)
+            mail_inbox_waiting_list.clear()
+            mail_inbox_approved_list.clear()
+            mail_inbox_rejected_list.clear()
+            mail_inbox_text_browser.setText('')
+            mail_approved_text_browser.setText('')
+            mail_rejected_text_browser.setText('')
+            mail_inbox_waiting_view.setVisible(False)
+            mail_inbox_waiting_attached_name.setText('')
+            engine = sqc.Database().engine
+            conn = engine.connect()
+            archive_mail = sqc.Database().archive_mail
+            s = archive_mail.select()
+            s_value = conn.execute(s)
 
-        for val in s_value:
-            self.mail_inbox_dictionary.update({
-                str(val[0]):{
-                    'sender':val[1],
-                    'reciever':val[2],
-                    'date_sent':val[3],
-                    'from_who':val[4],
-                    'subject':val[5],
-                    'action':val[6],
-                    'have_attached':val[7],
-                    'attached_alias':val[8],
-                    'isseen':val[9],
-                    'iseditable':val[10],
-                    'filetype':val[11],
-                    'status':val[12],
-                    'status_message':val[13]}
-            })
-        self.mail_inbox_dictionary = OrderedDict(sorted(self.mail_inbox_dictionary.items(), reverse=True))
+            for val in s_value:
+                self.mail_inbox_dictionary.update({
+                    str(val[0]):{
+                        'sender':val[1],
+                        'reciever':val[2],
+                        'date_sent':val[3],
+                        'from_who':val[4],
+                        'subject':val[5],
+                        'action':val[6],
+                        'have_attached':val[7],
+                        'attached_alias':val[8],
+                        'isseen':val[9],
+                        'iseditable':val[10],
+                        'filetype':val[11],
+                        'status':val[12],
+                        'status_message':val[13]}
+                })
+            self.mail_inbox_dictionary = OrderedDict(sorted(self.mail_inbox_dictionary.items(), reverse=True))
 
-        for key in self.mail_inbox_dictionary.keys():
-            if self.mail_inbox_dictionary[key]['status'] == 'wait':
-                mail_inbox_waiting_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'],key,self.mail_inbox_dictionary[key]['date_sent']))
-            elif self.mail_inbox_dictionary[key]['status'] == 'accepted':
-                mail_inbox_approved_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
-            elif self.mail_inbox_dictionary[key]['status'] == 'rejected':
-                mail_inbox_rejected_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
+            for key in self.mail_inbox_dictionary.keys():
+                if self.mail_inbox_dictionary[key]['status'] == 'wait':
+                    mail_inbox_waiting_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'],key,self.mail_inbox_dictionary[key]['date_sent']))
+                elif self.mail_inbox_dictionary[key]['status'] == 'accepted':
+                    mail_inbox_approved_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
+                elif self.mail_inbox_dictionary[key]['status'] == 'rejected':
+                    mail_inbox_rejected_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
+        except  Exception as e:
+            print(e)
 
 class Docinfo_Dialogue(QDialog,docinfo_ui):
 
@@ -425,7 +476,8 @@ MAIN CLASS
 '''
 
 class MainApp(QMainWindow, ui):
-    PDFJS = 'file:///C:/__Jasper__/archive-system/pdfjs/web/viewer.html'
+    pdfjs_drive = os.getcwd()
+    PDFJS = 'file:///' + pdfjs_drive.replace('\\','/') + '/pdfjs/web/viewer.html'
     PDF = ''
 
 
@@ -508,6 +560,9 @@ class MainApp(QMainWindow, ui):
         mail_inbox_approved_button_container = self.mail_inbox_approved_button_container
         global mail_inbox_approved_comment
         mail_inbox_approved_comment = self.mail_inbox_approved_comment
+        global mail_inbox_rejected_comment
+        mail_inbox_rejected_comment = self.mail_inbox_rejected_comment
+
 
     def Handle_UI_Changes(self):
 
@@ -587,6 +642,10 @@ class MainApp(QMainWindow, ui):
         self.mail_inbox_waiting_reject.clicked.connect(self.mail_inbox_waiting_reject_action)
         self.mail_inbox_approved_list.clicked.connect(self.mail_inbox_approved_list_action)
         self.mail_inbox_approved_view.clicked.connect(self.mail_inbox_approved_view_action)
+        self.mail_inbox_approved_delete.clicked.connect(self.mail_inbox_approved_delete_action)
+        self.mail_inbox_rejected_list.clicked.connect(self.mail_inbox_rejected_list_action)
+        self.mail_inbox_rejected_reply.clicked.connect(self.mail_inbox_rejected_reply_action)
+        self.mail_inbox_rejected_delete.clicked.connect(self.mail_inbox_rejected_delete_action)
         # chat
         self.mail_compose_button.clicked.connect(self.mail_compose_button_action)
         self.mail_compose_upload_images.clicked.connect(self.mail_compose_upload_images_action)
@@ -1206,7 +1265,6 @@ class MainApp(QMainWindow, ui):
         self.mail_inbox_waiting_approve.setVisible(False)
         self.mail_inbox_button_action()
 
-
     def mail_request_button_action(self):
         self.mail_tab_widget.setCurrentIndex(3)
         self.mail_urequest_from.setText('')
@@ -1386,13 +1444,18 @@ class MainApp(QMainWindow, ui):
             msg.exec_()
 
     def mail_inbox_text_browser_source(self, date_recieved_value, from_value, subject_value, action_to_be_taken_value):
+        basedate = str(date_recieved_value).split('.')[0]
+        formatfrom='%Y-%m-%d %H:%M:%S'
+        formatto = '%a %d %b %Y, %I:%M %p'
+        date = datetime.datetime.strptime(basedate,formatfrom).strftime(formatto)
+
         tempstr = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">' \
                   '<html><head><meta name="qrichtext" content="1" /><style type="text/css">' \
                   'p, li { white-space: pre-wrap; }' \
                   '</style></head><body style=" font-family:\'Segoe UI\'; font-size:8.25pt; font-weight:400; font-style:normal;">' \
                   '<p style=" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:10pt; font-weight:600;">' \
                   'Date Recieved</span><span style=" font-size:10pt;"> : ' \
-                  + str(date_recieved_value) + '' \
+                  + date + '' \
                                           '<br /></span><span style=" font-size:10pt; font-weight:600;">From</span><span style=" font-size:10pt;"> : ' \
                   + from_value + '<br /><br /></span><span style=" font-size:10pt; font-weight:600;">' \
                                  'Subject / Specific Concern</span><span style=" font-size:10pt;"> :</span></p>' \
@@ -1407,7 +1470,9 @@ class MainApp(QMainWindow, ui):
     mail_inbox_dictionary = {}
     def mail_inbox_button_action(self):
         self.mail_inbox_approved_comment.setPlainText('')
+        self.mail_inbox_rejected_comment.setPlainText('')
         self.mail_inbox_approved_button_container.setVisible(False)
+        self.mail_inbox_rejected_button_container.setVisible(False)
         self.mail_inbox_waiting_view.setVisible(False)
         self.mail_inbox_waiting_attached_name.setText('')
         self.mail_tab_widget.setCurrentIndex(0)
@@ -1458,6 +1523,39 @@ class MainApp(QMainWindow, ui):
                 self.mail_inbox_approved_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
             elif self.mail_inbox_dictionary[key]['status'] == 'rejected':
                 self.mail_inbox_rejected_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
+
+    def mail_inbox_dictionary_refresh(self):
+        mail_inbox_dictionary = {}
+        engine = sqc.Database().engine
+        conn = engine.connect()
+        archive_mail = sqc.Database().archive_mail
+        s = archive_mail.select()
+        s_value = conn.execute(s)
+
+        for val in s_value:
+            self.mail_inbox_dictionary.update({
+                str(val[0]): {
+                    'sender': val[1],
+                    'reciever': val[2],
+                    'date_sent': val[3],
+                    'from_who': val[4],
+                    'subject': val[5],
+                    'action': val[6],
+                    'have_attached': val[7],
+                    'attached_alias': val[8],
+                    'isseen': val[9],
+                    'iseditable': val[10],
+                    'filetype': val[11],
+                    'status': val[12],
+                    'status_message': val[13],
+                    'reply_have_attached': val[14],
+                    'reply_attached_alias': val[15],
+                    'reply_is_editable': val[16],
+                    'reply_filetype': val[17]
+
+                }
+            })
+        self.mail_inbox_dictionary = OrderedDict(sorted(self.mail_inbox_dictionary.items(), reverse=True))
 
     def mail_inbox_waiting_list_action(self):
         global useraccount
@@ -1532,16 +1630,18 @@ class MainApp(QMainWindow, ui):
         except:
             pass
 
+    ##Approved
     def mail_inbox_approved_list_action(self):
         global useraccount
+        self.mail_inbox_dictionary_refresh()
         self.mail_inbox_approved_button_container.setVisible(True)
+        self.mail_inbox_rejected_button_container.setVisible(True)
         temp = self.mail_inbox_approved_list.currentItem().text()
         temp = temp.split('(')[1]
         temp = temp.split(')')[0]
         id = temp.replace('MSGID','')
         self.mail_approved_text_browser.setText(self.mail_inbox_text_browser_source(self.mail_inbox_dictionary[id]['date_sent'],self.mail_inbox_dictionary[id]['from_who'],self.mail_inbox_dictionary[id]['subject'],self.mail_inbox_dictionary[id]['action']))
         self.mail_inbox_approved_comment.setPlainText(self.mail_inbox_dictionary[id]['status_message'])
-
         if self.mail_inbox_dictionary[id]['reply_have_attached'] == False:
             self.mail_inbox_approved_view.setVisible(False)
             #self.mail_inbox_approved_save.setVisible(False)
@@ -1566,6 +1666,160 @@ class MainApp(QMainWindow, ui):
         alias = self.mail_inbox_dictionary[id]['reply_attached_alias']
         filetype =self.mail_inbox_dictionary[id]['reply_filetype']
         os.startfile(os.path.abspath(dir+'\\'+alias+'.'+filetype))
+
+    def mail_inbox_approved_delete_action(self):
+        temp = self.mail_inbox_approved_list.currentItem().text()
+        temp = temp.split('(')[1]
+        temp = temp.split(')')[0]
+        id = int(temp.replace('MSGID', ''))
+        engine = sqc.Database().engine
+        conn = engine.connect()
+        archive_mail = sqc.Database().archive_mail
+        s = archive_mail.delete().where(archive_mail.c.mailid == id)
+        conn.execute(s)
+
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Deleted!")
+        msg.setInformativeText('Mail Deleted')
+        msg.setWindowTitle("Ok")
+        msg.exec_()
+
+        self.mail_approved_text_browser.setText('')
+        self.mail_inbox_approved_comment.setPlainText('')
+        self.mail_inbox_approved_list.clear()
+
+        self.mail_inbox_dictionary = {}
+        engine = sqc.Database().engine
+        conn = engine.connect()
+        archive_mail = sqc.Database().archive_mail
+        s = archive_mail.select()
+        s_value = conn.execute(s)
+
+        for val in s_value:
+            self.mail_inbox_dictionary.update({
+                str(val[0]):{
+                    'sender':val[1],
+                    'reciever':val[2],
+                    'date_sent':val[3],
+                    'from_who':val[4],
+                    'subject':val[5],
+                    'action':val[6],
+                    'have_attached':val[7],
+                    'attached_alias':val[8],
+                    'isseen':val[9],
+                    'iseditable':val[10],
+                    'filetype':val[11],
+                    'status':val[12],
+                    'status_message':val[13],
+                    'reply_have_attached':val[14],
+                    'reply_attached_alias':val[15],
+                    'reply_is_editable':val[16],
+                    'reply_filetype':val[17]
+
+                }
+            })
+        self.mail_inbox_dictionary = OrderedDict(sorted(self.mail_inbox_dictionary.items(), reverse=True))
+        for key in self.mail_inbox_dictionary.keys():
+            if self.mail_inbox_dictionary[key]['status'] == 'accepted':
+                self.mail_inbox_approved_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
+
+    ##rejected
+    def mail_inbox_rejected_list_action(self):
+        global useraccount
+        self.mail_inbox_dictionary_refresh()
+        self.mail_inbox_rejected_button_container.setVisible(True)
+        temp = self.mail_inbox_rejected_list.currentItem().text()
+        temp = temp.split('(')[1]
+        temp = temp.split(')')[0]
+        id = temp.replace('MSGID','')
+        self.mail_rejected_text_browser.setText(self.mail_inbox_text_browser_source(self.mail_inbox_dictionary[id]['date_sent'],self.mail_inbox_dictionary[id]['from_who'],self.mail_inbox_dictionary[id]['subject'],self.mail_inbox_dictionary[id]['action']))
+        self.mail_inbox_rejected_comment.clear()
+        comment_arr = self.mail_inbox_dictionary[id]['status_message'].split('|')
+        if str(type(comment_arr)) == "<class 'list'>":
+            for c in comment_arr:
+                self.mail_inbox_rejected_comment.appendPlainText(c)
+        else:
+            self.mail_inbox_rejected_comment.setPlainText(comment_arr)
+
+
+
+        if self.mail_inbox_dictionary[id]['reply_have_attached'] == False:
+            if useraccount != 'admin':
+                self.mail_inbox_rejected_delete.setVisible(False)
+                self.mail_inbox_rejected_reply.setVisible(True)
+            else:
+                self.mail_inbox_rejected_delete.setVisible(True)
+                self.mail_inbox_rejected_reply.setVisible(True)
+        else:
+            if useraccount != 'admin':
+                self.mail_inbox_rejected_delete.setVisible(False)
+                self.mail_inbox_rejected_reply.setVisible(True)
+            else:
+                self.mail_inbox_rejected_delete.setVisible(True)
+                self.mail_inbox_rejected_reply.setVisible(True)
+
+    def mail_inbox_rejected_delete_action(self):
+        temp = self.mail_inbox_rejected_list.currentItem().text()
+        temp = temp.split('(')[1]
+        temp = temp.split(')')[0]
+        id = int(temp.replace('MSGID', ''))
+        engine = sqc.Database().engine
+        conn = engine.connect()
+        archive_mail = sqc.Database().archive_mail
+        s = archive_mail.delete().where(archive_mail.c.mailid == id)
+        conn.execute(s)
+
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Deleted!")
+        msg.setInformativeText('Mail Deleted')
+        msg.setWindowTitle("Ok")
+        msg.exec_()
+
+        self.mail_rejected_text_browser.setText('')
+        self.mail_inbox_rejected_comment.setPlainText('')
+        self.mail_inbox_rejected_list.clear()
+
+        self.mail_inbox_dictionary = {}
+        engine = sqc.Database().engine
+        conn = engine.connect()
+        archive_mail = sqc.Database().archive_mail
+        s = archive_mail.select()
+        s_value = conn.execute(s)
+
+        for val in s_value:
+            self.mail_inbox_dictionary.update({
+                str(val[0]): {
+                    'sender': val[1],
+                    'reciever': val[2],
+                    'date_sent': val[3],
+                    'from_who': val[4],
+                    'subject': val[5],
+                    'action': val[6],
+                    'have_attached': val[7],
+                    'attached_alias': val[8],
+                    'isseen': val[9],
+                    'iseditable': val[10],
+                    'filetype': val[11],
+                    'status': val[12],
+                    'status_message': val[13],
+                    'reply_have_attached': val[14],
+                    'reply_attached_alias': val[15],
+                    'reply_is_editable': val[16],
+                    'reply_filetype': val[17]
+
+                }
+            })
+        self.mail_inbox_dictionary = OrderedDict(sorted(self.mail_inbox_dictionary.items(), reverse=True))
+        for key in self.mail_inbox_dictionary.keys():
+            if self.mail_inbox_dictionary[key]['status'] == 'rejected':
+                self.mail_inbox_rejected_list.addItem('{}-(MSGID{})-[{}]'.format(self.mail_inbox_dictionary[key]['sender'], key,self.mail_inbox_dictionary[key]['date_sent']))
+
+    def mail_inbox_rejected_reply_action(self):
+        d = Reply_Dialogue(self)
+        d.show()
+
 
     ##COMPOSE
     def mail_compose_refresh(self):
@@ -1753,6 +2007,7 @@ class MainApp(QMainWindow, ui):
             msg.setInformativeText('Something went Wrong')
             msg.setWindowTitle("Error")
             msg.exec_()
+
 
 
 

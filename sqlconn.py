@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy import Table,Column,VARCHAR,INTEGER,Float,String,MetaData,ForeignKey,Date,Text,DECIMAL,Boolean
+from sqlalchemy import Table,Column,VARCHAR,INTEGER,Float,String,MetaData,ForeignKey,Date,DateTime,Text,DECIMAL,Boolean
 from sqlalchemy.sql import exists
 import os
 class Database():
@@ -31,11 +31,13 @@ class Database():
                              Column('filetype',VARCHAR(5)),
                              Column('date_uploaded',Date))
 
+
+
     archive_mail = Table('archive_mail',meta,
                          Column('mailid',INTEGER,primary_key = True),
                          Column('sender',VARCHAR(50)),
                          Column('reciever',VARCHAR(50)),
-                         Column('date_sent',Date),
+                         Column('date_sent',DateTime),
                          Column('from_who',VARCHAR(30)),
                          Column('subject',Text),
                          Column('action',Text),
@@ -66,8 +68,6 @@ class Database():
                          Column('iseditable',Boolean,unique=False,default=False),
                          Column('filetype', VARCHAR(5)),
                          )
-
-
 
 
     meta.create_all(engine)

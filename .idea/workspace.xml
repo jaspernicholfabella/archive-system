@@ -6,6 +6,9 @@
       <change beforePath="$PROJECT_DIR$/archive_system.ui" beforeDir="false" afterPath="$PROJECT_DIR$/archive_system.ui" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db/archive_system.db" beforeDir="false" afterPath="$PROJECT_DIR$/db/archive_system.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/jerric_atonia_routing_12_20_2019_00_06_19.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/reply_jerric_atonia_routing_12_20_2019_00_06_40.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sharedrive/archive_data/test.pdf" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/sqlconn.py" beforeDir="false" afterPath="$PROJECT_DIR$/sqlconn.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -28,7 +31,7 @@
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../stock_inventory_system" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -176,6 +179,33 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>265</line>
+          <option name="timeStamp" value="76" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>266</line>
+          <option name="timeStamp" value="77" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>267</line>
+          <option name="timeStamp" value="78" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>269</line>
+          <option name="timeStamp" value="79" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>270</line>
+          <option name="timeStamp" value="80" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
